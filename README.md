@@ -35,9 +35,32 @@ graph TD;
 
 ## Структура проекта
 
-- **Исходный код**: Реализация системы рекомендаций на **C#**
-- **Документация**: Описание требований, ТЗ и диаграмм
-- **Тестирование**: Скрипты для тестирования, отчеты
+структура проекта **ContentRecommendationSystem**:
+
+```
+ContentRecomendationSystem/
+│
+├── ContentRecommendationSystem/                        # Исходный код проекта
+│ ├── ContentRecommendationSystem.csproj                # Файл проекта
+│ ├── Program.cs                                        # Главный файл программы
+│ ├── ContentRecommendationSystem.cs                    # Другие файлы кода (класс для рекомендаций и др.)
+│ └── [другие файлы проекта]                            # Остальные файлы проекта (классы, утилиты)
+│
+├── Documentation/                                      # Папка для документации
+│ ├── requirements.md                                   # Описание требований
+│ ├── technical_specification.md                        # Техническое задание (ТЗ)
+│ ├── diagrams/                                         # Папка для диаграмм
+│ │ └── recommendation_diagram.svg                      # Диаграмма системы рекомендаций
+│
+├── tests/                                              # Папка для тестов
+│ ├── test_suites/                                      # Скрипты для тестирования
+│ │ └── [тесты и отчеты]                                # Тесты и отчет о тестировании
+│
+├── ContentRecommendationSystem.sln                     # Файл решения для Visual Studio
+├── .gitignore                                          # Файл для игнорирования
+├── .gitattributes                                      # Файл для атрибутов Git
+├── README.md                                           # Главный README файл
+```
 
 ## Установка
 
