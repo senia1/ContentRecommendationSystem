@@ -142,8 +142,10 @@ GET /api/v1/recommendations?user_id=123&method=mixed
 
 ## 5. Взаимодействие с API
 
-Система взаимодействует с внешними API для получения данных о контенте: cписок фильмов, сериалов, ТВ-каналов и спортивных трансляций.
-Система использует несколько API для получения информации о контенте.
+- Система взаимодействует с внешними API для получения данных о контенте: cписок фильмов, сериалов, ТВ-каналов и спортивных трансляций.
+  Система использует несколько API для получения информации о контенте.
+
+- Интеграция с API в C# реализована через использование HttpClient для отправки HTTP-запросов и Newtonsoft.Json для десериализации JSON-ответов в объекты C#. Подходит для большинства современных API, возможно использовать для взаимодействия с TMDb, TVMaze, SportRadar или любыми другими внешними сервисами.
 
 ### 5.1. **API для фильмов и сериалов**:
 
@@ -179,6 +181,88 @@ GET /api/v1/recommendations?user_id=123&method=mixed
 
 ```http
 GET https://api.themoviedb.org/3/movie/popular?api_key=your_api_key&language=ru-RU
+```
+
+- Пример взаимодействия API на C#:
+
+```csharp
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        // API-ключ
+        string apiKey = "your_api_key";
+        string url = $"https://api.themoviedb.org/3/movie/popular?api_key={apiKey}&language=ru-RU";
+
+        using (HttpClient client = new HttpClient())
+        {
+            // Отправка GET-запроса
+            HttpResponseMessage response = await client.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Получаем ответ в формате JSON
+                string jsonResponse = await response.Content.ReadAsStringAsync();
+
+                // Десериализация JSON в объекты C#
+                var movieData = JsonConvert.DeserializeObject<MovieResponse>(jsonResponse);
+
+                // Обработка полученных данных
+                foreach (var movie in movieData.Results)
+                {
+                    Console.WriteLine($"Title: {movie.Title}, Rating: {movie.VoteAverage}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Ошибка запроса: " + response.StatusCode);
+            }
+        }
+    }
+}
+
+// Классы для десериализации JSON-ответа
+public class MovieResponse
+{
+    [JsonProperty("results")]
+    public List<Movie> Results { get; set; }
+}
+
+public class Movie
+{
+    [JsonProperty("title")]
+    public string Title { get; set; }
+
+    [JsonProperty("vote_average")]
+    public double VoteAverage { get; set; }
+}
+
+```
+
+- Пример ответа:
+
+```json
+{
+  "page": 1,
+  "results": [
+    {
+      "id": 299534,
+      "title": "Avengers: Endgame",
+      "overview": "After the devastating events of Avengers: Infinity War...",
+      "release_date": "2019-04-26",
+      "vote_average": 8.4,
+      "genres": ["Action", "Adventure", "Science Fiction"]
+    },
+    {
+      "id": 299537,
+      "title": "Captain Marvel",
+      "overview": "Carol Danvers becomes one of the universe's most powerful heroes...",
+      "release_date": "2019-03-08",
+      "vote_average": 7.0,
+      "genres": ["Action", "Adventure", "Science Fiction"]
+    }
+  ]
+}
 ```
 
 #### 5.1.6. **Ограничения:**
@@ -219,6 +303,99 @@ GET https://api.themoviedb.org/3/movie/popular?api_key=your_api_key&language=ru-
 GET https://api.tvmaze.com/schedules?country=US&date=2025-03-01
 ```
 
+- Пример взаимодействия API на C#:
+
+```csharp
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        // API-ключ, если нужен
+        string url = "https://api.tvmaze.com/schedules?country=US&date=2025-03-01";
+
+        using (HttpClient client = new HttpClient())
+        {
+            // Отправка GET-запроса
+            HttpResponseMessage response = await client.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Получаем ответ в формате JSON
+                string jsonResponse = await response.Content.ReadAsStringAsync();
+
+                // Десериализация JSON в объекты C#
+                var scheduleData = JsonConvert.DeserializeObject<List<TVShow>>(jsonResponse);
+
+                // Обработка полученных данных
+                foreach (var show in scheduleData)
+                {
+                    Console.WriteLine($"Show: {show.Show.Name}, Channel: {show.Network.Name}, Air Time: {show.Airtime}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Ошибка запроса: " + response.StatusCode);
+            }
+        }
+    }
+}
+
+// Классы для десериализации JSON-ответа
+public class TVShow
+{
+    [JsonProperty("show")]
+    public Show Show { get; set; }
+
+    [JsonProperty("network")]
+    public Network Network { get; set; }
+
+    [JsonProperty("airtime")]
+    public string Airtime { get; set; }
+}
+
+public class Show
+{
+    [JsonProperty("name")]
+    public string Name { get; set; }
+}
+
+public class Network
+{
+    [JsonProperty("name")]
+    public string Name { get; set; }
+}
+
+```
+
+- Пример ответа:
+
+```json
+[
+  {
+    "show": {
+      "id": 1,
+      "name": "The Simpsons",
+      "genres": ["Animation", "Comedy"]
+    },
+    "airtime": "2025-03-01T18:00:00Z",
+    "network": {
+      "name": "FOX"
+    }
+  },
+  {
+    "show": {
+      "id": 2,
+      "name": "Breaking Bad",
+      "genres": ["Drama", "Thriller"]
+    },
+    "airtime": "2025-03-01T20:00:00Z",
+    "network": {
+      "name": "AMC"
+    }
+  }
+]
+```
+
 #### 5.2.6. **Ограничения:**
 
 - В случае высокой нагрузки или изменений расписаний, API может быть недоступным. Будет реализована обработка ошибок и уведомления пользователей. Если данные не могут быть получены (например, из-за недоступности API), система будет использовать последние доступные данные из кэша.
@@ -250,10 +427,33 @@ GET https://api.tvmaze.com/schedules?country=US&date=2025-03-01
 
 #### 5.3.5. **Методы запроса:**
 
-- Пример запроса для получения информации о спортивном событии::
+- Пример запроса для получения информации о спортивном событии:
 
 ```http
 GET https://api.sportradar.us/sports-api/v1/events?api_key=your_api_key
+```
+
+- Пример ответа:
+
+```json
+{
+  "events": [
+    {
+      "event_id": "12345",
+      "sport": "Football",
+      "teams": ["Team A", "Team B"],
+      "start_time": "2025-03-01T15:00:00Z",
+      "status": "Scheduled"
+    },
+    {
+      "event_id": "12346",
+      "sport": "Basketball",
+      "teams": ["Team C", "Team D"],
+      "start_time": "2025-03-01T17:30:00Z",
+      "status": "Scheduled"
+    }
+  ]
+}
 ```
 
 #### 5.3.6. **Ограничения:**
@@ -261,8 +461,52 @@ GET https://api.sportradar.us/sports-api/v1/events?api_key=your_api_key
 - Максимум 100 запросов в минуту для каждого API-ключа.
 </details>
 
-- Рейтинги и отзывы пользователей
-- Информация о новинках и расписаниях (для ТВ-каналов и спортивных событий)
+### 5.4. **Рейтинги и отзывы пользователей**
+
+### 5.5. **Информация о новинках и расписаниях (для ТВ-каналов и спортивных событий)**
+
+### 5.6. **Обработка ошибок и исключений**
+
+- Если API не доступно, система должна автоматически делать повторные попытки с заданным интервалом или использовать кэшированные данные.
+
+- Пример:
+
+```csharp
+try
+{
+    HttpResponseMessage response = await client.GetAsync(url);
+    response.EnsureSuccessStatusCode(); // Бросит исключение, если статус не успешен
+    string jsonResponse = await response.Content.ReadAsStringAsync();
+}
+catch (HttpRequestException e)
+{
+    Console.WriteLine("Ошибка запроса: " + e.Message);
+}
+catch (Exception e)
+{
+    Console.WriteLine("Ошибка: " + e.Message);
+}
+```
+
+### 5.7. **Ограничения API и управление лимитами**
+
+- Для предотвращения превышения лимитов запросов система использует механизмы кеширования или очереди для управления частотой запросов.
+
+### 5.8. **Кэширование данных**
+
+- Кэширование данных о контенте используется для уменьшения частоты запросов к внешним API и обеспечения более быстрого отклика системы.
+
+### 5.9. **Политики безопасности для взаимодействия с API**
+
+- Все взаимодействия с внешними API выполнены через защищенное соединение (HTTPS), аутентификация осуществляется с использованием токенов доступа или ключей API.
+
+### 5.10. **Версионирование API**
+
+- Каждое взаимодействие с API учитывает его версию, для предотвращения возможных ошибок при изменении структуры данных или методов запросов в будущем.
+
+## 5.11. **Тестирование взаимодействия с API**
+
+- Проведение интеграционного тестирования взаимодействия с каждым API, чтобы удостовериться, что данные получаются корректно и система правильно обрабатывает ответы.
 
 API должно обеспечивать:
 
