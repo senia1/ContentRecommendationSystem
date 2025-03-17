@@ -58,6 +58,81 @@ Cтруктура ТЗ соответствует принципам IEEE 830 и
 
 - Может страдать от проблемы **холодного старта**, когда система не имеет достаточного количества данных о новом пользователе
 - Проблемы с масштабируемостью и производительностью при большом количестве пользователей
+
+#### 4.1.6. **Пример кода коллаборативной фильтрации**:
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class CollaborativeFiltering
+{
+    // Структура данных для хранения оценок пользователей
+    private Dictionary<int, Dictionary<int, double>> userRatings = new Dictionary<int, Dictionary<int, double>>();
+
+    public CollaborativeFiltering()
+    {
+        // Пример данных: ID пользователей и их оценки контента
+        userRatings.Add(1, new Dictionary<int, double> { { 101, 5 }, { 102, 3 }, { 103, 4 } });
+        userRatings.Add(2, new Dictionary<int, double> { { 101, 4 }, { 102, 5 }, { 103, 2 } });
+        userRatings.Add(3, new Dictionary<int, double> { { 101, 2 }, { 102, 3 }, { 103, 5 } });
+    }
+
+    // Метод для вычисления сходства между пользователями по методу косинусного сходства
+    public double CalculateCosineSimilarity(Dictionary<int, double> ratingsA, Dictionary<int, double> ratingsB)
+    {
+        var commonRatings = ratingsA.Keys.Intersect(ratingsB.Keys);
+        double dotProduct = commonRatings.Sum(rating => ratingsA[rating] * ratingsB[rating]);
+        double magnitudeA = Math.Sqrt(ratingsA.Values.Sum(v => v * v));
+        double magnitudeB = Math.Sqrt(ratingsB.Values.Sum(v => v * v));
+        return dotProduct / (magnitudeA * magnitudeB);
+    }
+
+    // Метод для получения рекомендаций
+    public List<int> GetRecommendations(int userId)
+    {
+        var user = userRatings[userId];
+        var similarities = new Dictionary<int, double>();
+
+        foreach (var otherUserId in userRatings.Keys.Where(id => id != userId))
+        {
+            var otherUser = userRatings[otherUserId];
+            double similarity = CalculateCosineSimilarity(user, otherUser);
+            similarities.Add(otherUserId, similarity);
+        }
+
+        var similarUsers = similarities.OrderByDescending(s => s.Value).Take(2);
+        var recommendedItems = new List<int>();
+
+        foreach (var similarUser in similarUsers)
+        {
+            var otherUser = userRatings[similarUser.Key];
+            foreach (var item in otherUser.Keys)
+            {
+                if (!user.ContainsKey(item)) // Если пользователь не оценил этот контент
+                {
+                    recommendedItems.Add(item);
+                }
+            }
+        }
+
+        return recommendedItems.Distinct().ToList();
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        var recommender = new CollaborativeFiltering();
+        var recommendations = recommender.GetRecommendations(1);
+        Console.WriteLine("Recommended items for user 1: " + string.Join(", ", recommendations));
+    }
+}
+```
+
+- В примере кода коллаборативной фильтрации реализован метод для вычисления косинусного сходства между пользователями и рекомендация контента на основе схожих предпочтений, данный пример кода является базовым и может быть расширен в зависимости от потребности системы (добавление работы с базой данных или улучшение логики фильтрации).
     </details>
 
 ### 4.2. **Контентная фильтрация**:
@@ -85,6 +160,58 @@ Cтруктура ТЗ соответствует принципам IEEE 830 и
 #### 4.2.4. **Ограничения:**
 
 - Может не учитывать "неочевидные" предпочтения пользователя (например, интерес к жанрам или темам, которые не были явно выражены в истории просмотров).
+
+#### 4.2.5. **Пример кода контентной фильтрации:**
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class ContentFiltering
+{
+    // Структура данных для хранения контента с его характеристиками
+    private Dictionary<int, Dictionary<string, string>> contentAttributes = new Dictionary<int, Dictionary<string, string>>();
+
+    public ContentFiltering()
+    {
+        // Пример данных: контент с атрибутами (например, жанр, рейтинг)
+        contentAttributes.Add(101, new Dictionary<string, string> { { "genre", "Action" }, { "rating", "5" } });
+        contentAttributes.Add(102, new Dictionary<string, string> { { "genre", "Comedy" }, { "rating", "4" } });
+        contentAttributes.Add(103, new Dictionary<string, string> { { "genre", "Action" }, { "rating", "4" } });
+    }
+
+    // Метод для получения рекомендаций на основе контента
+    public List<int> GetRecommendations(int userId)
+    {
+        var userPreferredGenre = "Action"; // Пример предпочтений пользователя
+        var recommendedItems = new List<int>();
+
+        foreach (var content in contentAttributes)
+        {
+            if (content.Value["genre"] == userPreferredGenre)
+            {
+                recommendedItems.Add(content.Key);
+            }
+        }
+
+        return recommendedItems;
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        var recommender = new ContentFiltering();
+        var recommendations = recommender.GetRecommendations(1);
+        Console.WriteLine("Recommended items based on content for user 1: " + string.Join(", ", recommendations));
+    }
+}
+
+```
+
+- В примере кода контентной фильтрации рекомендации строятся на основе атрибутов контента (жанр, рейтинг и др.). Данный пример кода является базовым и может быть расширен в зависимости от потребности системы (добавление работы с базой данных или улучшение логики фильтрации).
   </details>
 
 ### 4.3 **Смешанный подход**:
@@ -112,6 +239,60 @@ Cтруктура ТЗ соответствует принципам IEEE 830 и
 
 - Требует больше вычислительных ресурсов для обработки и комбинации результатов
 - Необходимость в сложной настройке для оптимизации веса методов
+
+#### 4.3.5. **Пример кода смешанного подхода:**
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class MixedFiltering
+{
+    private CollaborativeFiltering collaborativeFiltering;
+    private ContentFiltering contentFiltering;
+
+    public MixedFiltering()
+    {
+        collaborativeFiltering = new CollaborativeFiltering();
+        contentFiltering = new ContentFiltering();
+    }
+
+    // Метод для получения рекомендаций с использованием смешанного подхода
+    public List<int> GetRecommendations(int userId, string method)
+    {
+        if (method == "collaborative")
+        {
+            return collaborativeFiltering.GetRecommendations(userId);
+        }
+        else if (method == "content")
+        {
+            return contentFiltering.GetRecommendations(userId);
+        }
+        else if (method == "mixed")
+        {
+            var collaborativeRecommendations = collaborativeFiltering.GetRecommendations(userId);
+            var contentRecommendations = contentFiltering.GetRecommendations(userId);
+            return collaborativeRecommendations.Concat(contentRecommendations).Distinct().ToList();
+        }
+
+        return new List<int>();
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        var recommender = new MixedFiltering();
+        var recommendations = recommender.GetRecommendations(1, "mixed");
+        Console.WriteLine("Mixed recommendations for user 1: " + string.Join(", ", recommendations));
+    }
+}
+
+```
+
+- В примере кода смешанного подхода метод получения рекомендаций объединяет результаты обоих методов коллаборативной и контентной фильтрации, предлагая более разнообразные рекомендации. Данный пример кода является базовым и может быть расширен в зависимости от потребности системы (добавление работы с базой данных или улучшение логики фильтрации).
   </details>
 
 ### 4.4 **Применение алгоритма**:
@@ -503,9 +684,15 @@ catch (Exception e)
 
 ### 5.8. **Кэширование данных**
 
-- Кэширование данных о контенте используется для уменьшения частоты запросов к внешним API и обеспечения более быстрого отклика системы.
+- Кэширование данных о контенте используется для уменьшения частоты запросов к внешним API и обеспечения более быстрого отклика системы. Система обновляет данные о контенте каждую ночь (каждые 24 часа) автоматически с использованием внешнего API. В случае недоступности API, система использует последние доступные данные из кэша.
 
-- Система обновляет данные о контенте каждую ночь (каждые 24 часа) автоматически с использованием внешнего API. В случае недоступности API, система использует последние доступные данные из кэша.
+- **Тип кэширования**: Кэширование данных о контенте осуществляется с использованием **локального кэширования на сервере** или **кэширования в базе данных**, в зависимости от конфигурации системы. Это уменьшает количество повторных запросов к внешним API и ускоряет обработку запросов от пользователей
+
+- **Срок хранения данных**: Все данные, полученные от внешних API, хранятся в кэше **24 часа**. После этого данные считаются устаревшими, и система выполняет новый запрос к API для получения актуальной информации, это гарантирует, что данные будут всегда актуальными и соответствующими последним изменениям
+
+- **Обновление данных**: Кэшированные данные обновляются автоматически каждый день (каждые 24 часа) в **период ночного обновления системы**. В случае, если API временно недоступно или произошла ошибка при запросе, система будет использовать последние доступные данные из кэша. Это гарантирует, что пользователи всегда будут получать информацию, даже в случае временных сбоев с внешними сервисами
+
+- **Обновление данных при изменении версии API**: При изменении версии API (переход с /v1/ на /v2/), система автоматически обновляет запросы и данные, с учетом новой версии API. Это позволяет избежать проблем с несовместимостью данных и обеспечивает правильную работу системы при изменениях внешнего сервиса
 
 ### 5.9. **Политики безопасности для взаимодействия с API**
 
@@ -551,7 +738,7 @@ catch (Exception e)
 - Правильность десериализации данных
 - Обработка кэшированных данных, если API недоступно
 
-  5.12 **Обеспечение API**:
+### 5.12 **Обеспечение API**:
 
 - Стандартные запросы для получения контента
 - Обновление данных в реальном времени для обеспечения актуальности рекомендаций
