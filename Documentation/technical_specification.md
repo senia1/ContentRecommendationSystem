@@ -837,6 +837,50 @@ GET /api/v1/movies?genre=action&rating=8.0
 - Данные о контенте (фильмы, сериалы, спорт-трансляции, ТВ-контент, мультфильмы)
 - Историю просмотров и оценки пользователей
 
+#### ER диаграмма базы данных:
+
+```mermaid
+erDiagram
+    USERS {
+        INTEGER user_id PK
+        STRING google_email
+        STRING google_id
+        STRING full_name
+        STRING profile_picture_url
+        TIMESTAMP registered_at
+    }
+
+    CONTENT {
+        INTEGER content_id PK
+        STRING title
+        STRING genre
+        STRING content_type
+        DATE release_date
+        TEXT description
+        DECIMAL rating
+    }
+
+    USER_PREFERENCES {
+        INTEGER preference_id PK
+        INTEGER user_id FK
+        STRING preferred_genre
+        DECIMAL preference_weight
+    }
+
+    USER_ACTIVITY {
+        INTEGER activity_id PK
+        INTEGER user_id FK
+        INTEGER content_id FK
+        STRING activity_type
+        TIMESTAMP activity_date
+    }
+
+    USERS ||--o{ USER_PREFERENCES: "1 user has 0 or more preferences"
+    USERS ||--o{ USER_ACTIVITY: "1 user acts 0 or more types"
+    CONTENT ||--o{ USER_ACTIVITY: "1 content appears 0 or more times"
+
+```
+
 Для обеспечения масштабируемости и эффективной обработки большого количества пользователей, система использует **распределенную** базу данных:
 
 - **Citus - расширение для PostgreSQL**, так как PostgreSQL не является изначально распределенной базой данных, у нее есть возможности репликации и расширения, позволяющие настроить ее для работы в распределенной среде с хорошей отказоустойчивостью и горизонтальной масштабируемостью, с использованием инструмента Citus. Citus - расширение для PostgreSQL, позволяющее масштабировать базу данных горизонтально. Citus разделяет данные по нескольким узлам, что позволяет эффективно распределять нагрузку. Благодаря этому PostgreSQL работает как распределенная база данных, обеспечивая поддержку шардирования, распределенных запросов и высокую производительность.
