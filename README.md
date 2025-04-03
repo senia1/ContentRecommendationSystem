@@ -48,6 +48,11 @@ ContentRecomendationSystem/
 │ ├── ContentRecommendationSystem.csproj                # Файл проекта
 │ ├── Program.cs                                        # Главный файл программы
 │ ├── ContentRecommendationSystem.cs                    # Другие файлы кода (класс для рекомендаций и др.)
+| ├── DatabaseService.cs                                # Класс для работы с базой данных
+│ ├── RecommendationEngine.cs                           # Логика рекомендаций
+│ ├── UserPreferences.cs                                # Класс для хранения предпочтений пользователя
+│ ├── GoogleAuth.cs                                     # Класс для авторизации через Google
+│ ├── User.cs                                           # Класс пользователя
 │ └── [другие файлы проекта]                            # Остальные файлы проекта (классы, утилиты)
 │
 ├── Documentation/                                      # Папка для документации
@@ -55,6 +60,10 @@ ContentRecomendationSystem/
 │ ├── technical_specification.md                        # Техническое задание (ТЗ)
 │ ├── diagrams/                                         # Папка для диаграмм
 │ │ └── recommendation_diagram.svg                      # Диаграмма системы рекомендаций
+│ │ └── component_diagram.svg                           # Диаграмма компонентов
+│ │ └── preferences_analysis_diagram.svg                # Диаграмма анализа предпочтений
+│ │ └── classes_diagram.svg                             # Диаграмма классов
+│ │ └── er_diagram.svg                                  # Диаграмма ER
 │
 ├── tests/                                              # Папка для тестов
 │ ├── test_suites/                                      # Скрипты для тестирования
