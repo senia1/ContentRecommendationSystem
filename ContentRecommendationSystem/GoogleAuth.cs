@@ -26,11 +26,10 @@ public class GoogleAuth
                 ClientSecret = clientSecret
             },
             new[] { "https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email" },
-            "user", // Идентификатор для пользователя
+            "user",
             CancellationToken.None
         );
 
-        // Получение данных о пользователе (например, его имя)
         var peopleService = new PeopleServiceService(new BaseClientService.Initializer()
         {
             HttpClientInitializer = credential,
@@ -39,7 +38,6 @@ public class GoogleAuth
 
         var profile = await peopleService.People.Get("people/me").ExecuteAsync();
 
-        // Возвращаем имя пользователя
         return profile.Names?.FirstOrDefault()?.DisplayName ?? "Неизвестное имя";
     }
 }

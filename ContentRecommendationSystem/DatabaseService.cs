@@ -12,7 +12,6 @@ public class DatabaseService
         _connString = connString;
     }
 
-    // Метод для получения соединения с базой данных
     private NpgsqlConnection GetConnection()
     {
         var conn = new NpgsqlConnection(_connString);
@@ -20,7 +19,6 @@ public class DatabaseService
         return conn;
     }
 
-    // Метод для получения пользователя по ID
     public async Task<User> GetUserByIdAsync(int userId)
     {
         using (var conn = GetConnection())
@@ -31,7 +29,6 @@ public class DatabaseService
         }
     }
 
-    // Метод для получения контента по категории
     public async Task<IEnumerable<Content>> GetContentByCategoryAsync(string category)
     {
         using (var conn = GetConnection())
@@ -52,7 +49,6 @@ public class DatabaseService
         }
     }
 
-    // Метод для инициализации базы данных
     public void InitializeDatabase()
     {
         using (var conn = GetConnection())
